@@ -10,11 +10,14 @@
    </head>
 
    <body>
-      <div id="settings">
-         <input id="groups" type="range" class="range" min="1" max="10"/>
-         <select id="class"></select>
-         <button id="shuffle" class="button">Sorteggia</button>
-      </div>
+      <table id="settings">
+         <td><input id="groups" type="range" class="range" value="5" min="2" max="10"/></td>
+         <td><input id="groupscount" size="10" readonly></td>
+         <td><select id="classes"></select></td>
+         <td><button id="shuffle" class="button">Sorteggia</button></td>
+      </table>
+
+      <br><br><br>
 
       <table id="draw"></table>
    </body>

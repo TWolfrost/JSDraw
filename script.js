@@ -1,45 +1,85 @@
 import CLASSES from "./classes.json" assert {type: "json"}
 
 const NUMGROUPS = document.getElementById("groups");
-const SELCLASS = document.getElementById("class");
+const GROUPSCOUNT = document.getElementById("groupscount");
+const SELCLASS = document.getElementById("classes");
 const SHUFFLE = document.getElementById("shuffle");
-const DRAW = document.getElementById("draw");
+const DRAWTABLE = document.getElementById("draw");
+
+countUpdate()
+
+selectionUpdate(SELCLASS, Object.keys(CLASSES))
+
+NUMGROUPS.addEventListener("input", countUpdate)
+SHUFFLE.addEventListener("click", countDown)
+SHUFFLE.addEventListener("touchend", countDown)
 
 
-for (const key in CLASSES)
+function countDown()
 {
-   const OPT = document.createElement("option");
-   OPT.value = OPT.innerText = key;
-   SELCLASS.appendChild(OPT);
+   if (DRAWTABLE.classList.contains("countdown") == false)
+   {
+      DRAWTABLE.classList.add("countdown");
+
+      let timer = 3;
+
+      let intervalFun = () =>
+      {
+         if (timer == -1)
+         {
+            clearInterval(intervalID);
+            DRAWTABLE.classList.remove("countdown");
+            drawCurrent()
+         }
+         else
+         {
+            DRAWTABLE.innerHTML = "";
+            const TD = document.createElement("td");
+            TD.innerText = timer;
+            DRAWTABLE.appendChild(TD);
+         }
+
+         timer--;
+      }
+
+      intervalFun()
+      let intervalID = setInterval(intervalFun, 1000)
+   }
 }
 
 
-SHUFFLE.addEventListener("click", drawCurrent)
-SHUFFLE.addEventListener("touchend", drawCurrent)
+function selectionUpdate(selOBJ, optarr, clear=true)
+{
+   if (clear) selOBJ.innerHTML = "";
 
+   for (let opt of optarr)
+   {
+      let optOBJ = document.createElement("option");
+      optOBJ.value = optOBJ.innerText = opt;
+      selOBJ.appendChild(optOBJ);
+   }
+}
 
+function countUpdate()
+{
+   GROUPSCOUNT.value = NUMGROUPS.value + " GRUPPI";
+}
 function drawCurrent()
 {
-   let curClass = CLASSES[SELCLASS.value];
+   let people = CLASSES[SELCLASS.value];
    let numGroups = NUMGROUPS.value;
 
-   if (numGroups > curClass.length)
-   {
-      for (let i=curClass.length; i<numGroups; i++)
-      {
-         curClass.push("");
-      }
-   }
+   if (numGroups > people.length) numGroups = people.length
 
-   let drawed = draw(curClass, numGroups);
+   let drawed = draw(people, numGroups);
 
-   let perGroup = Math.floor(curClass.length / numGroups);
-   if (curClass.length % perGroup != 0) perGroup++;
+   DRAWTABLE.innerHTML = "";
 
-   setTable(DRAW, drawed, NUMGROUPS.value, perGroup);
+   setHeader(DRAWTABLE, numGroups)
+   setTable(DRAWTABLE, drawed);
 }
 
-function draw(_class, numGroups)
+function draw(people, numGroups)
 {
    function shuffle(arr)
    {
@@ -52,45 +92,41 @@ function draw(_class, numGroups)
       return arr;
    }
 
-   let perGruppo = Math.floor(_class.length / numGroups);
+
+   let perGroup = Math.floor(people.length / numGroups);
+
+   people = shuffle(people)
 
 
    let groups = [];
 
-
-   _class = shuffle(_class)
-
-   for (let i=0; i<_class.length; i+=perGruppo) groups.push(_class.slice(i, i+perGruppo))
+   for (let i=0; i<people.length; i+=perGroup)
+   {
+      groups.push(people.slice(i, i+perGroup))
+   }
 
 
    if (groups.length > numGroups)
    {
-      let remGroups = groups.slice(numGroups).flat();
+      let remGroup = [];
 
-      groups = groups.slice(0, numGroups);
+      while (groups.length > numGroups) remGroup.push(groups.pop());
 
-      let randArray = []
+      remGroup = remGroup.flat();
 
-      for (let i=0; i<remGroups.length; i++)
-      {
-         let rand;
+      while (remGroup.length < numGroups) remGroup.push("");
 
-         do {
-            rand = Math.floor(Math.random() * (groups.length));
-         } while (randArray.includes(rand))
+      remGroup = shuffle(remGroup);
 
-         randArray.push(rand);
-         groups[rand].push(remGroups[i])
-      }
+      for (let i=0; i<numGroups; i++) groups[i].push(remGroup[i]);
    }
+
 
    return groups;
 }
 
-function setTable(table, drawed, _class, perGroupMax)
+function setHeader(table, cols)
 {
-   table.innerHTML = "";
-
    const TH = document.createElement("th");
    TH.colSpan = 10;
    TH.innerText = "Sorteggi";
@@ -101,7 +137,7 @@ function setTable(table, drawed, _class, perGroupMax)
    const GROUPTR = document.createElement("tr");
    table.appendChild(GROUPTR);
 
-   for (let i=0; i<_class; i++)
+   for (let i=0; i<cols; i++)
    {
       const TD = document.createElement("td");
 
@@ -110,13 +146,15 @@ function setTable(table, drawed, _class, perGroupMax)
 
       GROUPTR.appendChild(TD);
    }
-
-   for (let i=0; i<perGroupMax; i++)
+}
+function setTable(table, drawed)
+{
+   for (let i=0; i<drawed[0].length; i++)
    {
       const TR = document.createElement("tr");
       table.appendChild(TR);
 
-      for (let j=0; j<_class; j++)
+      for (let j=0; j<drawed.length; j++)
       {
          const TD = document.createElement("td");
 
@@ -125,6 +163,4 @@ function setTable(table, drawed, _class, perGroupMax)
          TR.appendChild(TD);
       }
    }
-
-   return 0;
 }
